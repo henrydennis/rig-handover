@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { loadConfig, type RigConfig } from './config.js';
+import { readNight } from './digest/read.js';
 import { lane } from './lane.js';
 import { readStatus } from './status.js';
 import { Layout } from './views/layout.js';
@@ -9,6 +10,14 @@ export function createApp(config: RigConfig = loadConfig()) {
   const app = new Hono();
 
   app.get('/health', (c) => c.json({ ok: true, lane: lane().id }));
+
+  // The page and this route read the same `readNight` rows, in the order it returns them.
+  app.get('/api/digest/:night', (c) => {
+    const night = c.req.param('night');
+    const read = readNight(config.runsDir, night);
+    if (!read) return c.json({ error: 'no run log', night }, 404);
+    return c.json({ night, badLines: read.badLines, rows: read.rows });
+  });
 
   app.get('/', (c) =>
     c.html(
