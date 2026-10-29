@@ -15,7 +15,8 @@ in a shell this agent can run.
    One issue per unit of work.
 3. **Stop and show the table to the human.** Publish nothing until they approve it.
 4. Ask the human what every issue here must carry (fields, labels, wording), unless it is
-   already written down in this session or in the repo.
+   already written down in this session or in the repo. It is: see [What every issue
+   carries](#what-every-issue-carries). If the human changes it, change that section too.
 5. Create each issue in dependency order, so blocked-by can cite real numbers:
 
    ```sh
@@ -29,6 +30,36 @@ Closing one, with the closing comment from AGENTS.md:
 ```sh
 gh issue close <n> -c "<closing comment>"
 ```
+
+## What every issue carries
+
+Decided by Henry Dennis, 29 October 2026, for the morning-digest plan.
+
+```md
+Source: plan.md § <n>
+
+## Scope
+
+<what to build, from that section; the rules from docs/ that apply>
+
+## Done when
+
+<the plan's "Done when", word for word>
+
+## Blocked by
+
+<#n, or —; say when only part of #n is needed, e.g. "#1 (only its types commit)">
+
+## Suggested worker
+
+<strongest model for logic, a cheaper one for views and tests (AGENTS.md), and why>
+```
+
+- The first line is always `Source: plan.md § <n>`, and every issue is labelled
+  `plan:<plan name>` (e.g. `plan:morning-digest`; create the label if it's missing). That's how
+  the reviewer sorts them.
+- A "Done when" that waits on someone else (a reviewer looking, a reply) holds when they have done
+  it, not when you sent it. Keep that issue open and say what it waits on.
 
 ## No `gh`
 
