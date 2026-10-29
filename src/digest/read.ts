@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { DigestRow, Night, ReadNight, RunStatus } from './types.js';
 
-type Entry = { at: string; job: string; status: RunStatus; owner: string | null; error: string | null };
+export type Entry = { at: string; job: string; status: RunStatus; owner: string | null; error: string | null };
 
 const STATUSES: readonly string[] = ['ok', 'retry', 'fail'] satisfies RunStatus[];
 
@@ -31,7 +31,8 @@ function parseLine(line: string): Entry | null {
   return { at: o.at, job: o.job, status: o.status, owner: o.owner, error: o.error ?? null };
 }
 
-export const readNight: ReadNight = (runsDir, night) => {
+// Every valid line of a night in file order, and how many lines didn't parse. null: no file.
+export function readEntries(runsDir: string, night: string): { entries: Entry[]; badLines: number } | null {
   if (!NIGHT.test(night)) return null;
   let text: string;
   try {
@@ -41,15 +42,24 @@ export const readNight: ReadNight = (runsDir, night) => {
     throw e;
   }
 
-  const byJob = new Map<string, DigestRow>();
+  const entries: Entry[] = [];
   let badLines = 0;
   for (const line of text.split('\n')) {
     if (line.trim() === '') continue;
     const entry = parseLine(line);
-    if (!entry) {
-      badLines++;
-      continue;
-    }
+    if (entry) entries.push(entry);
+    else badLines++;
+  }
+  return { entries, badLines };
+}
+
+export const readNight: ReadNight = (runsDir, night) => {
+  const read = readEntries(runsDir, night);
+  if (!read) return null;
+  const { entries, badLines } = read;
+
+  const byJob = new Map<string, DigestRow>();
+  for (const entry of entries) {
     const row = byJob.get(entry.job);
     // File order is the order of record: the latest line sets owner, status, error and time.
     byJob.set(entry.job, {
