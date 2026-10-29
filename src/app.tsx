@@ -12,6 +12,14 @@ export function createApp(config: RigConfig = loadConfig()) {
 
   app.get('/health', (c) => c.json({ ok: true, lane: lane().id }));
 
+  // The page and this route read the same `readNight` rows, in the order it returns them.
+  app.get('/api/digest/:night', (c) => {
+    const night = c.req.param('night');
+    const read = readNight(config.runsDir, night);
+    if (!read) return c.json({ error: 'no run log', night }, 404);
+    return c.json({ night, badLines: read.badLines, rows: read.rows });
+  });
+
   app.get('/', (c) =>
     c.html(
       <Layout title="status" lane={lane()}>
